@@ -117,6 +117,9 @@ class SlidingUpPanel extends StatefulWidget {
   /// backdrop closes the panel. Defaults to true.
   final bool backdropTapClosesPanel;
 
+  /// Sets if panel is visible at start. True if null.
+  final bool? isPanelVisible;
+
   /// If non-null, this callback
   /// is called as the panel slides around with the
   /// current position of the panel. The position is a double
@@ -186,6 +189,7 @@ class SlidingUpPanel extends StatefulWidget {
       this.backdropColor = Colors.black,
       this.backdropOpacity = 0.5,
       this.backdropTapClosesPanel = true,
+      this.isPanelVisible,
       this.onPanelSlide,
       this.onPanelOpened,
       this.onPanelClosed,
@@ -218,6 +222,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
   @override
   void initState() {
     super.initState();
+
+    _isPanelVisible = widget.isPanelVisible ?? true;
 
     _ac = new AnimationController(
         vsync: this,
