@@ -474,13 +474,11 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
     // whether to enable scrolling if the user swipes up, or disable closing and
     // begin to close the panel if the user swipes down
     if (_isPanelOpen && _sc.hasClients && _sc.offset <= 0) {
-      setState(() {
-        if (dy < 0) {
-          _scrollingEnabled = true;
-        } else {
-          _scrollingEnabled = false;
-        }
-      });
+      final scrollingEnabled = (dy < 0);
+      if (_scrollingEnabled != scrollingEnabled) {
+        _scrollingEnabled = scrollingEnabled;
+        setState(() {});
+      }
     }
   }
 
