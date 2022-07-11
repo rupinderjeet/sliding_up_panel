@@ -19,6 +19,8 @@ enum SlideDirection {
 
 enum PanelState { OPEN, CLOSED }
 
+enum DragMode { PANEL, HEADER, NONE }
+
 class SlidingUpPanel extends StatefulWidget {
   /// The Widget that slides into view. When the
   /// panel is collapsed and if [collapsed] is null,
@@ -45,17 +47,10 @@ class SlidingUpPanel extends StatefulWidget {
   /// to fill the screen.
   final Widget? body;
 
-  /// Optional persistent widget that floats above the [panel] and attaches
-  /// to the top of the [panel]. Content at the top of the panel will be covered
-  /// by this widget. Add padding to the bottom of the `panel` to
-  /// avoid coverage.
-  final Widget? header;
-
-  /// Optional persistent widget that floats above the [panel] and
-  /// attaches to the bottom of the [panel]. Content at the bottom of the panel
-  /// will be covered by this widget. Add padding to the bottom of the `panel`
-  /// to avoid coverage.
-  final Widget? footer;
+  /// Optional persistent widget above the [panel] and attaches
+  /// to the top of the [panel]. It will be used to drag the [panel]
+  /// if [dragMode] is set to [DragMode.HEADER]
+  final Widget? dragHeader;
 
   /// The height of the sliding panel when fully collapsed.
   final double minHeight;
@@ -146,9 +141,9 @@ class SlidingUpPanel extends StatefulWidget {
   final double parallaxOffset;
 
   /// Allows toggling of the draggability of the SlidingUpPanel.
-  /// Set this to false to prevent the user from being able to drag
-  /// the panel up and down. Defaults to true.
-  final bool isDraggable;
+  /// Set this to [DragMode.NONE] to prevent the user from being able to drag
+  /// the panel up and down. Defaults to [DragMode.PANEL].
+  final DragMode dragMode;
 
   /// Either SlideDirection.UP or SlideDirection.DOWN. Indicates which way
   /// the panel should slide. Defaults to UP. If set to DOWN, the panel attaches
@@ -195,11 +190,10 @@ class SlidingUpPanel extends StatefulWidget {
       this.onPanelClosed,
       this.parallaxEnabled = false,
       this.parallaxOffset = 0.1,
-      this.isDraggable = true,
+      this.dragMode = DragMode.PANEL,
+      this.dragHeader,
       this.slideDirection = SlideDirection.UP,
-      this.defaultPanelState = PanelState.CLOSED,
-      this.header,
-      this.footer})
+      this.defaultPanelState = PanelState.CLOSED})
       : assert(panel != null || panelBuilder != null),
         assert(0 <= backdropOpacity && backdropOpacity <= 1.0),
         assert(snapPoint == null || 0 < snapPoint && snapPoint < 1.0),
@@ -246,7 +240,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
     // draggable and panel scrolling is enabled
     _sc = new ScrollController();
     _sc.addListener(() {
-      if (widget.isDraggable && !_scrollingEnabled) _sc.jumpTo(0);
+      final isDraggable = (widget.dragMode == DragMode.PANEL);
+      if (isDraggable && !_scrollingEnabled) _sc.jumpTo(0);
     });
 
     widget.controller?._addState(this);
@@ -314,6 +309,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
         !_isPanelVisible
             ? Container()
             : _gestureHandler(
+                isHeader: false,
                 child: AnimatedBuilder(
                   animation: _ac,
                   builder: (context, child) {
@@ -353,37 +349,16 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                                   : 0),
                           child: Container(
                             height: widget.maxHeight,
-                            child: widget.panel != null
-                                ? widget.panel
-                                : widget.panelBuilder!(_sc),
+                            child: Column(children: [
+                              widget.dragHeader != null
+                                  ? _gestureHandler(
+                                      isHeader: true, child: widget.dragHeader!)
+                                  : Container(),
+                              Expanded(
+                                  child: widget.panel ??
+                                      widget.panelBuilder!(_sc)),
+                            ]),
                           )),
-
-                      // header
-                      widget.header != null
-                          ? Positioned(
-                              top: widget.slideDirection == SlideDirection.UP
-                                  ? 0.0
-                                  : null,
-                              bottom:
-                                  widget.slideDirection == SlideDirection.DOWN
-                                      ? 0.0
-                                      : null,
-                              child: widget.header ?? SizedBox(),
-                            )
-                          : Container(),
-
-                      // footer
-                      widget.footer != null
-                          ? Positioned(
-                              top: widget.slideDirection == SlideDirection.UP
-                                  ? null
-                                  : 0.0,
-                              bottom:
-                                  widget.slideDirection == SlideDirection.DOWN
-                                      ? null
-                                      : 0.0,
-                              child: widget.footer ?? SizedBox())
-                          : Container(),
 
                       // collapsed panel
                       Positioned(
@@ -445,19 +420,33 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
   // and a listener if panelBuilder is used.
   // this is because the listener is designed only for use with linking the scrolling of
   // panels and using it for panels that don't want to linked scrolling yields odd results
-  Widget _gestureHandler({required Widget child}) {
-    if (!widget.isDraggable) return child;
-
-    if (widget.panel != null) {
-      return GestureDetector(
-        onVerticalDragUpdate: (DragUpdateDetails dets) =>
-            _onGestureSlide(dets.delta.dy),
-        onVerticalDragEnd: (DragEndDetails dets) =>
-            _onGestureEnd(dets.velocity),
-        child: child,
-      );
+  Widget _gestureHandler({required Widget child, required bool isHeader}) {
+    if (isHeader && widget.dragMode == DragMode.HEADER) {
+      return _gestureListener(child: child);
     }
 
+    if (isHeader) {
+      return child;
+    }
+
+    if (widget.dragMode == DragMode.PANEL) {
+      if (widget.panel != null) {
+        return GestureDetector(
+          onVerticalDragUpdate: (DragUpdateDetails dets) =>
+              _onGestureSlide(dets.delta.dy),
+          onVerticalDragEnd: (DragEndDetails dets) =>
+              _onGestureEnd(dets.velocity),
+          child: child,
+        );
+      }
+
+      return _gestureListener(child: child);
+    }
+
+    return child;
+  }
+
+  Widget _gestureListener({required Widget child}) {
     return Listener(
       onPointerDown: (PointerDownEvent p) =>
           _vt.addPosition(p.timeStamp, p.position),
