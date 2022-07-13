@@ -52,6 +52,9 @@ class SlidingUpPanel extends StatefulWidget {
   /// if [dragMode] is set to [DragMode.HEADER]
   final Widget? dragHeader;
 
+  /// The maximum allowed width of the sliding panel when fully open.
+  final double? maxWidth;
+
   /// The height of the sliding panel when fully collapsed.
   final double minHeight;
 
@@ -163,6 +166,7 @@ class SlidingUpPanel extends StatefulWidget {
       this.panelBuilder,
       this.body,
       this.collapsed,
+      this.maxWidth,
       this.minHeight = 100.0,
       this.maxHeight = 500.0,
       this.snapPoint,
@@ -340,13 +344,14 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                           bottom: widget.slideDirection == SlideDirection.DOWN
                               ? 0.0
                               : null,
-                          width: MediaQuery.of(context).size.width -
-                              (widget.margin != null
-                                  ? widget.margin!.horizontal
-                                  : 0) -
-                              (widget.padding != null
-                                  ? widget.padding!.horizontal
-                                  : 0),
+                          width:
+                              (widget.maxWidth ?? MediaQuery.of(context).size.width) -
+                                  (widget.margin != null
+                                      ? widget.margin!.horizontal
+                                      : 0) -
+                                  (widget.padding != null
+                                      ? widget.padding!.horizontal
+                                      : 0),
                           child: Container(
                             height: widget.maxHeight,
                             child: Column(children: [
@@ -368,7 +373,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                         bottom: widget.slideDirection == SlideDirection.DOWN
                             ? 0.0
                             : null,
-                        width: MediaQuery.of(context).size.width -
+                        width: (widget.maxWidth ?? MediaQuery.of(context).size.width) -
                             (widget.margin != null
                                 ? widget.margin!.horizontal
                                 : 0) -
