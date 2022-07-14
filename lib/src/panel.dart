@@ -217,6 +217,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
 
   bool _isPanelVisible = true;
 
+  ScrollController get scrollController => _sc;
+
   @override
   void initState() {
     super.initState();
@@ -344,14 +346,14 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                           bottom: widget.slideDirection == SlideDirection.DOWN
                               ? 0.0
                               : null,
-                          width:
-                              (widget.maxWidth ?? MediaQuery.of(context).size.width) -
-                                  (widget.margin != null
-                                      ? widget.margin!.horizontal
-                                      : 0) -
-                                  (widget.padding != null
-                                      ? widget.padding!.horizontal
-                                      : 0),
+                          width: (widget.maxWidth ??
+                                  MediaQuery.of(context).size.width) -
+                              (widget.margin != null
+                                  ? widget.margin!.horizontal
+                                  : 0) -
+                              (widget.padding != null
+                                  ? widget.padding!.horizontal
+                                  : 0),
                           child: Container(
                             height: widget.maxHeight,
                             child: Column(children: [
@@ -373,7 +375,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
                         bottom: widget.slideDirection == SlideDirection.DOWN
                             ? 0.0
                             : null,
-                        width: (widget.maxWidth ?? MediaQuery.of(context).size.width) -
+                        width: (widget.maxWidth ??
+                                MediaQuery.of(context).size.width) -
                             (widget.margin != null
                                 ? widget.margin!.horizontal
                                 : 0) -
@@ -753,5 +756,11 @@ class PanelController {
   bool get isPanelShown {
     assert(isAttached, "PanelController must be attached to a SlidingUpPanel");
     return _panelState!._isPanelShown;
+  }
+
+  /// Returns ScrollController that was used in panelBuilder
+  ScrollController? get scrollController {
+    assert(isAttached, "PanelController must be attached to a SlidingUpPanel");
+    return _panelState!.scrollController;
   }
 }
