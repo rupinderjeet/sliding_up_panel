@@ -6,10 +6,10 @@ Copyright: © 2020, Akshath Jain. All rights reserved.
 Licensing: More information can be found here: https://github.com/akshathjain/sliding_up_panel/blob/master/LICENSE
 */
 
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
 enum SlideDirection {
@@ -762,5 +762,21 @@ class PanelController {
   ScrollController? get scrollController {
     assert(isAttached, "PanelController must be attached to a SlidingUpPanel");
     return _panelState!.scrollController;
+  }
+}
+
+extension PanelControllerExtension on PanelController {
+  /// Opens the sliding panel safely
+  /// See [PanelController.open]
+  Future<void> openIfAttached() async {
+    if (isAttached) return open();
+    return;
+  }
+
+  /// Closes the sliding panel safely
+  /// See [PanelController.close]
+  Future<void> closeIfAttached() async {
+    if (isAttached) return close();
+    return;
   }
 }
